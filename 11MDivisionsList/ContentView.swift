@@ -1,5 +1,32 @@
 import SwiftUI
 
+
+struct Checkbox: View {
+    @Binding var isChecked: Bool
+    var key: Int // Pass the key to track the checkbox state for each item
+
+    var body: some View {
+        Image(systemName: isChecked ? "checkmark.square" : "square")
+            .resizable()
+            .frame(width: 24, height: 24)
+            .foregroundColor(.white)
+            .onTapGesture {
+                isChecked.toggle()
+                saveCheckboxState()
+            }
+    }
+    
+    func saveCheckboxState() {
+        let defaults = UserDefaults.standard
+        defaults.set(isChecked, forKey: "checkboxState_\(key)")
+    }
+}
+
+func loadCheckboxState(key: Int) -> Bool {
+    let defaults = UserDefaults.standard
+    return defaults.bool(forKey: "checkboxState_\(key)")
+}
+
 var appVersion: String {
     return Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
 }
@@ -366,36 +393,42 @@ let countriesList: [Int: (country: String, flag: String)] = [
 struct ContentView: View {
     @State private var checkedItems: [Int: Bool] = [:] // State to track the checkbox status for each item
 
+    init() {
+        for key in countriesList.keys {
+            _checkedItems = State(initialValue: [key: loadCheckboxState(key: key)])
+        }
+    }
+
     var body: some View {
         VStack {
             Text("11M Divisions")
                 .font(.largeTitle)
                 .foregroundColor(.white)
                 .padding(.top)
-
+           
             ScrollView {
-                           VStack(alignment: .leading) {
-                               ForEach(countriesList.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
-                                   HStack {
-                                       Text("\(key)")
-                                       Toggle("", isOn: Binding(
-                                           get: { self.checkedItems[key] ?? false },
-                                           set: { self.checkedItems[key] = $0 }
-                                       ))
-                                       .labelsHidden() // Hide the label of the toggle
-                                       Spacer()
-                                       Text(value.country)
-                                       Image(value.flag)
-                                           .resizable()
-                                           .frame(width: 32, height: 32)
-                                   }
-                                   .padding()
-                                   Divider()
-                               }
-                           }
-                           .padding()
-                           .foregroundColor(.white)
-                       }
+                VStack(alignment: .leading) {
+                    ForEach(countriesList.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
+                        HStack {
+                            Text("\(key)")
+                            Text(value.country)
+                            Spacer()
+                            Image(value.flag)
+                                .resizable()
+                                .frame(width: 32, height: 32)
+                            Checkbox(isChecked: Binding(
+                                get: { self.checkedItems[key] ?? false },
+                                set: { self.checkedItems[key] = $0 }
+                            ), key: key) // Pass the key to the Checkbox view
+                        }
+                        .padding()
+                        Divider()
+                    }
+                }
+                .padding()
+                .foregroundColor(.white)
+            }
+ 
             
             Spacer()
 
