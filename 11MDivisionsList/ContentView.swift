@@ -364,7 +364,6 @@ let countriesList: [Int: (country: String, flag: String)] = [
 ]
 
 struct ContentView: View {
-    @State private var checkedItems: [Int: Bool] = [:] // State to track the checkbox status for each item
 
     var body: some View {
         VStack {
@@ -378,11 +377,6 @@ struct ContentView: View {
                                ForEach(countriesList.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
                                    HStack {
                                        Text("\(key)")
-                                       Toggle("", isOn: Binding(
-                                           get: { self.checkedItems[key] ?? false },
-                                           set: { self.checkedItems[key] = $0 }
-                                       ))
-                                       .labelsHidden() // Hide the label of the toggle
                                        Spacer()
                                        Text(value.country)
                                        Image(value.flag)
